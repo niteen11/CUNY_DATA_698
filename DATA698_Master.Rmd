@@ -1,0 +1,157 @@
+---
+title: "DATA698_MASTER"
+author: "Niteen Kumar"
+date: "March 12, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(knitr)
+library(psych)
+library(ggplot2)
+library(plotly)
+```
+
+```{r}
+patient.data.df = read.csv('https://raw.githubusercontent.com/niteen11/CUNY_DATA_698/master/dataset_diabetes/diabetic_data.csv')
+kable(head(patient.data.df))
+```
+
+
+```{r}
+dim(patient.data.df)
+summary(patient.data.df$gender)
+```
+
+
+```{r}
+summary(patient.data.df)
+```
+
+
+```{r}
+colnames(patient.data.df)
+```
+
+```{r}
+p <- ggplot(data = patient.data.df, aes(x = reorder(race, -time_in_hospital), y = patient.data.df$time_in_hospital, fill = patient.data.df$race)) +
+    geom_bar(stat = "summary",fun.y='mean') +
+    ylab("Time in Hospital") +
+    xlab("Race") +
+    ggtitle("Time in Hospital Vs. Race")
+
+p <- ggplotly(p)
+p
+```
+
+```{r warning=FALSE, message=FALSE}
+ggplot(data = patient.data.df)+    
+    geom_smooth(aes(x = patient.data.df$time_in_hospital, y =patient.data.df$num_procedures, se = F,show.legend = T,colour="num of procedures"))+
+  geom_smooth(aes(x = patient.data.df$time_in_hospital, y =patient.data.df$num_lab_procedures, se = F,show.legend = T,colour="num of lab procedures"))+
+    geom_smooth(aes(x = patient.data.df$time_in_hospital, y =patient.data.df$num_medications, se = F,show.legend = T,colour="num of medications"))+
+    scale_x_discrete(limit = patient.data.df$time_in_hospital)+
+    #scale_y_discrete(limit = patient.data.df$num_medications)+
+    scale_colour_manual(name="legend", values=c("blue", "red","green"))+
+    #scale_colour_manual(name="legend")+
+    ylab("Number of Procedures")+
+    xlab("Time in Hospital")+
+    ggtitle("Time in Hospital Vs. Number of Procedures and Medications")
+```
+
+
+
+
+
+
+```{r}
+#Research Question 1
+patient.rq1 <- select(patient.data.df,age,gender,race,admission_source_id,time_in_hospital,change,readmitted)
+head(patient.rq1)
+```
+
+
+```{r}
+patient.med.no.change <- patient.rq1 %>%
+  filter(change=='No')
+```
+
+```{r}
+head(patient.med.no.change)
+```
+
+
+```{r}
+patient.med.change <- patient.rq1 %>%
+  filter(change!='No')
+```
+
+```{r}
+kable(head(patient.med.change))
+```
+
+
+```{r}
+kable(describe(patient.rq1))
+```
+
+```{r}
+kable(describe(patient.med.no.change))
+```
+
+
+```{r}
+kable(describe(patient.med.change))
+```
+
+
+```{r}
+p <- ggplot(data=filter(patient.rq1,change=='No'), aes(readmitted))+
+      geom_bar(aes(fill=gender))+
+      geom_text(stat='count', aes(label=..count..), vjust=-0.2)+
+      #scale_x_continuous(breaks = c(0, 1))+
+      xlab('Readmission time range ')+
+      facet_wrap(~race)+
+      ggtitle('Readmission for No Medication Changes')+
+      theme_bw()
+p <- ggplotly(p)
+p
+```
+
+
+
+```{r}
+barplot(table(patient.rq1$change), col=c("#ADD8E6","#ff7373"), main = 'Readmission - Patient Medication ')
+```
+
+
+```{r}
+mosaicplot(data = patient.rq1, ~change+readmitted, color=c("#ADD8E6","#ff7373"), main ="medication change Vs Readmission" )
+```
+
+
+```{r}
+hist(patient.rq1$time_in_hospital, probability = TRUE, main = "Histogram of Readmissions", xlab = "Time in Hospital")
+x <- 1:15
+y <- dnorm(x = x, mean = mean(patient.rq1$time_in_hospital), sd = sd(patient.rq1$time_in_hospital))
+lines(x = x, y = y, col = "blue")
+```
+
+
+```{r}
+par(mfrow=c(1,3))
+boxplot(patient.data.df$admission_source_id, main = "Admission Source ID",col = "#ADD8E6")
+boxplot(patient.data.df$time_in_hospital, main = "Time in Hospital", col="#ff7373")
+boxplot(patient.data.df$num_medications, main = "Number of Medications", col="#98FB98")
+```
+
+
+```{r}
+qqnorm(patient.data.df$time_in_hospital)
+qqline(patient.data.df$number_diagnoses)
+```
+
